@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eaglercraft / Eaglerbedrock Launcher</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root {
+  --ui-scale:    1;
+  --accent:      #00aa00; /* Creeper Green Default */
+  --accent-hi:   #55ff55;
+  --accent-dim:  #005500;
+  --accent-glow: rgba(0, 170, 0, 0.18);
+  --bg:          #111111;
+  --bg2:         #1d1d1d;
+  --bg3:         #2a2a2a;
+  --panel:       #222222;
+  --border:      #444444;
+  --border2:     #555555;
+  --text:        #cccccc;
+  --text-dim:    #888888;
+  --text-bright: #ffffff;
+  --sans:        'VT323', monospace;
+}
+
+/* CUSTOM THEMES */
+[data-theme="dg-blue"] {
+  --accent:      #0055ff;
+  --accent-hi:   #6699ff;
+  --accent-dim:  #0033aa;
+  --accent-glow: rgba(0, 85, 255, 0.18);
+}
+[data-theme="premen-red"] {
+  --accent:      #cc0000;
+  --accent-hi:   #ff4444;
+  --accent-dim:  #800000;
+  --accent-glow: rgba(200, 0, 0, 0.22);
+}
+[data-theme="brainrot-yellow"] {
+  --accent:      #ddaa00;
+  --accent-hi:   #ffdd33;
+  --accent-dim:  #886600;
+  --accent-glow: rgba(221, 170, 0, 0.18);
+}
+[data-theme="creeper-green"] {
+  --accent:      #00aa00;
+  --accent-hi:   #55ff55;
+  --accent-dim:  #005500;
+  --accent-glow: rgba(0, 170, 0, 0.18);
+}
+[data-theme="diamond-blue"] {
+  --accent:      #33eebb;
+  --accent-hi:   #88ffff;
+  --accent-dim:  #008888;
+  --accent-glow: rgba(51, 238, 187, 0.18);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); display: flex; flex-direction: column; }
+
+.launcher { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--bg2); position: relative; overflow: hidden; zoom: var(--ui-scale); }
+
+.title-bar { background: var(--panel); border-bottom: 4px solid var(--bg); padding: 8px 18px; display: flex; align-items: center; justify-content: flex-start; flex-shrink: 0; position: relative; }
+.launcher-tabs { display: flex; gap: 10px; }
+.tab-btn { background: var(--bg3); border: 3px solid var(--border); border-right-color: #111; border-bottom-color: #111; color: var(--text-dim); font-family: var(--sans); font-size: 20px; padding: 6px 20px; cursor: pointer; text-transform: uppercase; transition: 0.1s; }
+.tab-btn:hover { background: var(--border); color: var(--text-bright); }
+.tab-btn.active { background: var(--accent-dim); color: var(--accent-hi); border-color: var(--accent-hi); border-right-color: var(--accent-dim); border-bottom-color: var(--accent-dim); }
+
+.content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+.sidebar { width: 200px; flex-shrink: 0; background: var(--panel); border-right: 4px solid var(--bg); display: flex; flex-direction: column; }
+.profile { padding: 16px 14px 13px; border-bottom: 2px solid var(--border); }
+.profile-label { font-size: 16px; color: var(--text-dim); margin-bottom: 5px; }
+.profile-name { font-size: 24px; color: var(--text-bright); display: block; overflow: hidden; text-overflow: ellipsis; }
+.profile-status { font-size: 16px; color: var(--accent); display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+.status-dot { width: 8px; height: 8px; background: var(--accent); }
+
+nav { flex: 1; min-height: 0; padding: 6px 0; overflow-y: auto; }
+.nav-section-label { font-size: 16px; color: var(--text-dim); padding: 10px 15px 4px; }
+.nav-item { display: flex; align-items: center; gap: 11px; padding: 10px 15px; cursor: pointer; font-size: 20px; color: var(--text-dim); text-transform: uppercase; user-select: none; text-decoration: none; }
+.nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.nav-item.selected { background: var(--accent-glow); color: var(--text-bright); border-left: 4px solid var(--accent); }
+.sidebar-bottom { flex-shrink: 0; border-top: 2px solid var(--border); padding: 6px 0; }
+
+.main-panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg3); overflow: hidden; }
+.top-bar { background: var(--panel); border-bottom: 2px solid var(--border); padding: 0 18px; height: 38px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.game-title { font-size: 20px; color: var(--text-dim); }
+.game-title span { color: var(--accent); }
+
+/* Play Log Console */
+.main-content { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg2); }
+#play-log { flex: 1; background: var(--bg); border: 3px solid var(--border); border-right-color: #111; border-bottom-color: #111; margin: 15px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-family: var(--sans); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+.log-entry { font-size: 18px; word-break: break-all; }
+.log-entry.info { color: var(--text-bright); }
+.log-entry.success { color: var(--accent-hi); }
+.log-entry.error { color: #ff5555; }
+.log-time { color: var(--text-dim); margin-right: 8px; }
+.log-ascii { color: var(--accent-dim); white-space: pre; font-size: 14px; margin-bottom: 10px; line-height: 1; }
+
+.launch-bar { flex-shrink: 0; background: var(--panel); border-top: 4px solid var(--bg); padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 10; }
+.version-wrapper { position: relative; flex: 1; max-width: 320px; }
+.version-select { width: 100%; background: var(--bg); border: 3px solid var(--border); border-right-color: #111; border-bottom-color: #111; color: var(--text-bright); font-size: 20px; padding: 10px 14px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; }
+.version-select:hover, .version-select.open { border-color: var(--accent); border-right-color: var(--accent-dim); border-bottom-color: var(--accent-dim); }
+.version-dropdown { position: absolute; bottom: calc(100% + 5px); left: 0; right: 0; background: var(--bg2); border: 3px solid var(--border); max-height: 230px; overflow-y: auto; display: none; z-index: 1000; }
+.version-dropdown.open { display: block; }
+.version-group-label { font-size: 16px; color: var(--text-dim); padding: 8px 11px 4px; border-top: 2px solid var(--border); }
+.version-option { padding: 8px 11px; cursor: pointer; font-size: 18px; color: var(--text); }
+.version-option:hover { background: var(--accent-glow); color: var(--text-bright); }
+.version-option.active-ver { color: var(--accent); }
+
+.launch-mode-badge { font-size: 18px; color: var(--text-dim); border: 2px solid var(--border); padding: 6px 12px; cursor: pointer; }
+.launch-mode-badge:hover { border-color: var(--accent); color: var(--accent); }
+
+.refresh-btn { background: var(--bg3); border: 3px solid var(--border); border-right-color: #111; border-bottom-color: #111; color: var(--text-dim); font-size: 20px; padding: 8px 14px; cursor: pointer; }
+.refresh-btn:hover { color: var(--accent-hi); border-color: var(--accent); }
+
+.play-button { background: var(--accent); border: 3px solid var(--accent-hi); border-right-color: var(--accent-dim); border-bottom-color: var(--accent-dim); color: #fff; font-family: var(--sans); font-size: 24px; padding: 0 40px; height: 44px; cursor: pointer; }
+.play-button:hover { background: var(--accent-hi); }
+.play-button:disabled { background: var(--border); border-color: var(--border2); color: var(--text-dim); cursor: not-allowed; }
+
+.bottom-bar { background: var(--panel); border-top: 2px solid var(--border); padding: 5px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.status-line { font-size: 16px; color: var(--text-dim); }
+.status-line .hl { color: var(--accent); }
+.credit { font-size: 16px; color: var(--text-dim); }
+
+.settings-scroll { flex: 1; overflow-y: auto; padding: 26px 30px; }
+.settings-section { margin-bottom: 30px; }
+.settings-section-title { font-size: 20px; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.settings-section-title::after { content: ''; flex: 1; height: 2px; background: var(--border); }
+.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px; background: var(--panel); border: 2px solid var(--border); margin-bottom: 3px; gap: 20px; }
+.settings-label { font-size: 22px; color: var(--text-bright); }
+.settings-desc { font-size: 16px; color: var(--text-dim); margin-top: 3px; }
+.settings-input { background: var(--bg); border: 2px solid var(--border); color: var(--text-bright); font-family: var(--sans); font-size: 18px; padding: 7px 11px; width: 220px; outline: none; }
+.settings-btn { background: var(--accent); border: 2px solid var(--accent-hi); color: #fff; font-family: var(--sans); font-size: 18px; padding: 7px 18px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+
+/* Themes UI */
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 10px; }
+.theme-card { padding: 12px; border: 3px solid var(--border); border-right-color: #111; border-bottom-color: #111; background: var(--bg); cursor: pointer; text-align: center; font-size: 20px; color: var(--text-dim); transition: 0.1s; text-transform: uppercase; }
+.theme-card:hover { border-color: var(--accent); color: var(--text-bright); border-right-color: var(--accent-dim); border-bottom-color: var(--accent-dim); }
+.theme-card.selected { border-color: var(--accent-hi); background: var(--accent-dim); color: var(--text-bright); border-right-color: #111; border-bottom-color: #111; }
+
+.mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.mode-card { padding: 13px 12px; border: 2px solid var(--border); cursor: pointer; background: var(--panel); }
+.mode-card:hover { border-color: var(--border2); }
+.mode-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+.mode-card-title { font-size: 20px; color: var(--text-bright); margin-bottom: 5px; text-transform: uppercase; }
+.mode-card.selected .mode-card-title { color: var(--accent-hi); }
+.mode-card-desc { font-size: 16px; color: var(--text-dim); line-height: 1.2; }
+
+/* Skin Grid */
+.skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+.skin-card { background: var(--panel); border: 2px solid var(--border); padding: 15px; display: flex; flex-direction: column; align-items: center; transition: border-color 0.1s; }
+.skin-card:hover { border-color: var(--border2); }
+.skin-card img { width: 100%; max-width: 150px; image-rendering: pixelated; margin: 10px 0; }
+.skin-name { font-size: 22px; color: var(--text-bright); text-transform: uppercase; margin-bottom: 10px; }
+
+/* Document Format for Terms */
+.document-view { font-family: var(--sans); font-size: 18px; color: var(--text); line-height: 1.4; padding-bottom: 40px; }
+.document-view h2 { color: var(--accent); font-size: 28px; margin: 24px 0 12px; border-bottom: 2px solid var(--border); padding-bottom: 5px; }
+.document-view h3 { color: var(--text-bright); font-size: 22px; margin: 16px 0 8px; }
+.document-view p { margin-bottom: 12px; }
+.document-view ul { margin-left: 24px; margin-bottom: 12px; }
+.document-view li { margin-bottom: 6px; }
+
+#panel-bedrock { justify-content: center; align-items: center; text-align: center; flex-direction: column; }
+#panel-bedrock h2 { color: var(--accent); font-size: 42px; margin-bottom: 20px; }
+#panel-bedrock p { font-size: 24px; color: var(--text-bright); }
+
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(55px); background: var(--panel); border: 2px solid var(--accent); color: var(--text-bright); font-size: 20px; padding: 10px 24px; z-index: 9999; transition: transform 0.2s ease; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9990; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
+.loading-overlay.active { display: flex; }
+.loading-text { font-size: 24px; color: var(--accent); }
+.loading-bar-wrap { width: 300px; height: 10px; background: var(--border); }
+.loading-bar { height: 100%; background: var(--accent); width: 0%; }
+</style>
+</head>
+<body>
+
+<div class="launcher">
+
+  <div class="title-bar">
+    <div class="launcher-tabs">
+      <button class="tab-btn active" id="tab-eagler" onclick="switchLauncher('eaglercraft')">Eaglercraft Launcher</button>
+      <button class="tab-btn" id="tab-bedrock" onclick="switchLauncher('bedrock')">Eaglerbedrock Launcher</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="sidebar">
+      <div class="profile">
+        <div class="profile-label">Player</div>
+        <span class="profile-name" id="profile-name">Steve</span>
+        <div class="profile-status"><div class="status-dot"></div>ONLINE</div>
+      </div>
+      <nav>
+        <div class="nav-section-label">Navigation</div>
+        <div class="nav-item selected" id="nav-game" onclick="showView('game')">Game</div>
+        <div class="nav-item" id="nav-skins" onclick="showView('skins')">Skins</div>
+        <div class="nav-item" id="nav-terms" onclick="showView('terms')">Terms</div>
+      </nav>
+      <div class="sidebar-bottom">
+        <a href="https://github.com/Arro-p/GX-Launcher/" target="_blank" class="nav-item" style="color: var(--accent-hi);">Source Code</a>
+        <div class="nav-item" id="nav-settings" onclick="showView('settings')">Settings</div>
+      </div>
+    </div>
+
+    <!-- EAGLERCRAFT GAME VIEW -->
+    <div class="main-panel" id="panel-game">
+      <div class="top-bar"><div class="game-title">EAGLERCRAFT <span>// LAUNCHER</span></div></div>
+      
+      <div class="main-content">
+        <div id="play-log">
+          <div class="log-ascii">
+   ____      _    ____ _     _____ ____   ____ ____      _    _____ _____ 
+  |  _ \    / \  / ___| |   | ____|  _ \ / ___|  _ \    / \  |  ___|_   _|
+  | |_) |  / _ \| |  _| |   |  _| | |_) | |   | |_) |  / _ \ | |_    | |  
+  |  __/  / ___ \ |_| | |___| |___|  _ <| |___|  _ <  / ___ \|  _|   | |  
+  |_|    /_/   \_\____|_____|_____|_| \_\\____|_| \_\/_/   \_\_|     |_|  
+          </div>
+        </div>
+      </div>
+      
+      <div class="launch-bar">
+        <div class="version-wrapper">
+          <div class="version-select" id="game-select" onclick="toggleGameDropdown()">
+            <span id="game-label">Select Game</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="version-dropdown" id="game-dropdown"><div class="version-group-label">Loading games…</div></div>
+        </div>
+        <button class="refresh-btn" onclick="populateGames()">↻</button>
+        <div class="launch-mode-badge" onclick="showView('settings')">MODE: <span id="mode-badge-text">BLOB URL</span></div>
+        <button class="play-button" id="play-btn" onclick="playGame()" disabled>LAUNCH</button>
+      </div>
+      <div class="bottom-bar">
+        <div class="status-line" id="status-line-game">READY</div>
+        <div class="credit">Built by Jon Stearns</div>
+      </div>
+    </div>
+
+    <!-- EAGLERBEDROCK VIEW -->
+    <div class="main-panel" id="panel-bedrock" style="display:none;">
+      <h2>Eaglerbedrock is in the works and is not out yet.</h2>
+      <p>Our own versions of Eaglerbedrock are currently in development.</p>
+    </div>
+
+    <!-- SKINS VIEW -->
+    <div class="main-panel" id="panel-skins" style="display:none;">
+      <div class="top-bar"><div class="game-title">LAUNCHER <span>// SKINS</span></div></div>
+      <div class="settings-scroll">
+        <div class="settings-section">
+          <div class="settings-section-title">Add a New Skin</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Minecraft Username</div>
+              <div class="settings-desc">Enter any premium Java username to fetch their 3D skin render.</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="settings-input" id="skin-input" type="text" placeholder="e.g. Notch">
+              <button class="settings-btn" onclick="addSkin()">Add</button>
+            </div>
+          </div>
+          <div class="skin-grid" id="skins-grid">
+            <!-- Skin cards injected here via JS -->
+          </div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="status-line">MANAGE SKINS</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="main-panel" id="panel-settings" style="display:none;">
+      <div class="top-bar"><div class="game-title">LAUNCHER <span>// SETTINGS</span></div></div>
+      <div class="settings-scroll">
+        <div class="settings-section">
+          <div class="settings-section-title">Profile</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Username</div>
+              <div class="settings-desc">Displayed in the launcher sidebar</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input class="settings-input" id="username-input" type="text" placeholder="Enter username" maxlength="24">
+              <button class="settings-btn" onclick="saveUsername()">Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <div class="settings-section-title">Launcher Theme</div>
+          <div class="theme-grid">
+            <div class="theme-card" data-theme-name="dg-blue" onclick="applyTheme('dg-blue')">DG Blue</div>
+            <div class="theme-card" data-theme-name="premen-red" onclick="applyTheme('premen-red')">Premen Red</div>
+            <div class="theme-card" data-theme-name="brainrot-yellow" onclick="applyTheme('brainrot-yellow')">Brainrot Yellow</div>
+            <div class="theme-card" data-theme-name="creeper-green" onclick="applyTheme('creeper-green')">Creeper Green</div>
+            <div class="theme-card" data-theme-name="diamond-blue" onclick="applyTheme('diamond-blue')">Diamond Blue</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Launch Mode</div>
+          <div class="mode-grid">
+            <div class="mode-card" data-mode="regular" onclick="selectLaunchMode('regular', this)"><div class="mode-card-title">Regular</div><div class="mode-card-desc">Opens the live GitHub Pages URL in a new tab. Works for every game.</div></div>
+            <div class="mode-card" data-mode="about-blank" onclick="selectLaunchMode('about-blank', this)"><div class="mode-card-title">About:Blank</div><div class="mode-card-desc">Fetches the game and writes it into an about:blank tab. Bypasses some URL filters.</div></div>
+            <div class="mode-card" data-mode="data-uri" onclick="selectLaunchMode('data-uri', this)"><div class="mode-card-title">Data URI</div><div class="mode-card-desc">Base64 encodes a game-fetch loader and copies it to your clipboard. Bookmarkable.</div></div>
+            <div class="mode-card selected" data-mode="blob" onclick="selectLaunchMode('blob', this)"><div class="mode-card-title">Blob URL</div><div class="mode-card-desc">Fetches the game HTML and opens it as a blob: URL in a new tab.</div></div>
+            <div class="mode-card" data-mode="popup" onclick="selectLaunchMode('popup', this)"><div class="mode-card-title">Popup Window</div><div class="mode-card-desc">Opens a 1280×720 borderless popup. Requires popups to be allowed in browser.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <div class="status-line" id="status-line-settings">SETTINGS</div>
+        <div class="credit">Built by Jon Stearns</div>
+      </div>
+    </div>
+
+    <!-- TERMS VIEW -->
+    <div class="main-panel" id="panel-terms" style="display:none;">
+      <div class="top-bar"><div class="game-title">LAUNCHER <span>// TERMS & PRIVACY</span></div></div>
+      <div class="settings-scroll document-view">
+        <h2>About Us</h2>
+        <p>We are a completely independent, community-driven project. We are entirely unaffiliated with, and unendorsed by, Mojang AB or Microsoft Corporation.</p>
+        <p>Our primary mission is to provide educational access to web-compatible, community-modified versions of games like Eaglercraft. Our platform acts merely as an index and client-side launcher; we do not host actual game binaries or proprietary assets on our own servers, nor do we condone or facilitate digital piracy.</p>
+
+        <h2>Terms of Service</h2>
+        <p>These terms govern the relationship between you and our launcher service. By utilizing the services we provide, you acknowledge and agree to adhere to these terms.</p>
+        <p>Our software and web services are provided strictly on an <strong>"as is" and "as available" basis</strong>, without any warranties or guarantees of any kind, either express or implied. This includes, but is not limited to, implied warranties of merchantability, uptime reliability, or fitness for a particular purpose. In no event shall the authors, operators, or copyright holders of this launcher be held legally liable for any claims, data loss, damages, or other liabilities arising out of or directly connected to the use of these services.</p>
+        <p>Furthermore, by accessing our platform, you represent and warrant that:</p>
+        <ul>
+            <li>Your use of this site is for educational, archival, or personal entertainment purposes only.</li>
+            <li>You possess the legal capacity to agree to these terms, or you have obtained explicit parental permission to use our services if you are a minor in your local jurisdiction.</li>
+            <li>You are at least 13 years of age.</li>
+            <li>You will not abuse, DDoS, or excessively request data from our services through automated scripts, bots, or non-human means.</li>
+            <li>You will not leverage our infrastructure for unauthorized, malicious, or illegal activities.</li>
+            <li>Your continued use of this service complies with all applicable local and international laws.</li>
+        </ul>
+
+        <h2>Privacy Policy & Data Handling</h2>
+        <p>We prioritize your privacy and aim to collect only the minimal data necessary to keep the launcher functioning properly.</p>
+        <ul>
+            <li><strong>Local Storage:</strong> Your game worlds, server lists, and personalized settings are saved entirely within your own browser's local storage (IndexedDB/LocalStorage). We do not have access to your world data. If you clear your browser cache, your worlds will be lost.</li>
+            <li><strong>Analytics & Telemetry:</strong> We utilize privacy-friendly analytics (such as Plausible and Google Analytics) to measure site traffic. Additionally, an anonymous heartbeat monitor tallies active player counts while the game is running.</li>
+            <li><strong>Hardware Profiling for Optimization:</strong> To ensure the web client runs smoothly across various devices, your browser will periodically perform a localized, anonymous check of your system capabilities (e.g., memory, CPU cores, graphics rendering capacity, and screen resolution). This aggregated data helps us balance performance but is never tied to your IP address or personal identity.</li>
+        </ul>
+
+        <h2>Copyright and DMCA Policy</h2>
+        <p>We respect intellectual property rights and strictly adhere to standard DMCA protocols.</p>
+        <ul>
+            <li><strong>No Direct Hosting:</strong> Resources required to boot these web clients are fetched dynamically from the official servers of the respective rights holders, or from third-party community mirrors.</li>
+            <li><strong>Pass-Through Architecture:</strong> This website operates strictly as a static interface. We do not host, store, or distribute decompiled source code, proprietary game files, or copyrighted assets natively on our file system. Any files accessed through this launcher are handled directly by the user's browser via external repositories.</li>
+        </ul>
+      </div>
+      <div class="bottom-bar"><div class="status-line">TERMS AND CONDITIONS</div></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-text" id="loading-text">FETCHING...</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== GITHUB REPO SETTINGS =====
+const GH_OWNER  = 'arro-p';
+const GH_REPO   = 'GX-Launcher';
+const GH_BRANCH = 'main';
+const GAMES_PATH = 'game';
+const LIVE_ROOT = 'https://arro-p.github.io/GX-Launcher/';
+const IMAGE_EXTS = ['png','jpg','jpeg','gif','webp','svg','ico','bmp','avif'];
+const GX_MODE_LABELS = { regular:'REGULAR', 'about-blank':'ABOUT:BLANK', 'data-uri':'DATA URI', blob:'BLOB URL', popup:'POPUP' };
+
+function _lsGet(name) { try { return localStorage.getItem(name); } catch(e) { return null; } }
+function _lsSet(name, value) { try { localStorage.setItem(name, value); } catch(e) {} }
+function getCookie(name) { return _lsGet(name); }
+function setCookie(name, value) { _lsSet(name, String(value)); }
+
+let _toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function setStatus(html) { ['status-line-game','status-line-settings'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = html; }); }
+function showLoading(msg) { document.getElementById('loading-overlay').classList.add('active'); document.getElementById('loading-text').textContent = msg || 'LOADING...'; }
+function hideLoading() { document.getElementById('loading-overlay').classList.remove('active'); }
+
+// ===== PLAY LOG SYSTEM =====
+function addLog(message, type = 'info') {
+    const logBox = document.getElementById('play-log');
+    if (!logBox) return;
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour12: false });
+    
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.innerHTML = `<span class="log-time">[${timeString}]</span> ${message}`;
+    
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+// ===== LAUNCHER TAB SWITCHING =====
+function switchLauncher(type) {
+    const isEagler = type === 'eaglercraft';
+    document.getElementById('panel-game').style.display = isEagler ? 'flex' : 'none';
+    document.getElementById('panel-bedrock').style.display = isEagler ? 'none' : 'flex';
+    document.getElementById('panel-settings').style.display = 'none';
+    document.getElementById('panel-terms').style.display = 'none';
+    document.getElementById('panel-skins').style.display = 'none';
+    
+    document.getElementById('tab-eagler').classList.toggle('active', isEagler);
+    document.getElementById('tab-bedrock').classList.toggle('active', !isEagler);
+    
+    if(isEagler) {
+      document.getElementById('nav-game').classList.add('selected');
+      document.getElementById('nav-settings').classList.remove('selected');
+      document.getElementById('nav-terms').classList.remove('selected');
+      document.getElementById('nav-skins').classList.remove('selected');
+    } else {
+      document.getElementById('nav-game').classList.remove('selected');
+      document.getElementById('nav-settings').classList.remove('selected');
+      document.getElementById('nav-terms').classList.remove('selected');
+      document.getElementById('nav-skins').classList.remove('selected');
+    }
+}
+
+// ===== SIDEBAR NAVIGATION =====
+function showView(view) {
+    const isGame = view === 'game';
+    const isSettings = view === 'settings';
+    const isTerms = view === 'terms';
+    const isSkins = view === 'skins';
+    
+    document.getElementById('panel-game').style.display = isGame ? 'flex' : 'none';
+    document.getElementById('panel-settings').style.display = isSettings ? 'flex' : 'none';
+    document.getElementById('panel-terms').style.display = isTerms ? 'flex' : 'none';
+    document.getElementById('panel-skins').style.display = isSkins ? 'flex' : 'none';
+    document.getElementById('panel-bedrock').style.display = 'none';
+    
+    document.getElementById('nav-game').classList.toggle('selected', isGame);
+    document.getElementById('nav-settings').classList.toggle('selected', isSettings);
+    document.getElementById('nav-terms').classList.toggle('selected', isTerms);
+    document.getElementById('nav-skins').classList.toggle('selected', isSkins);
+    
+    if (isGame || isSettings || isTerms || isSkins) {
+        document.getElementById('tab-eagler').classList.add('active');
+        document.getElementById('tab-bedrock').classList.remove('active');
+    }
+}
+
+// ===== SETTINGS, THEMES & MODES =====
+function applyTheme(name) {
+    document.documentElement.setAttribute('data-theme', name);
+    setCookie('launcherTheme', name);
+    document.querySelectorAll('.theme-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.themeName === name);
+    });
+    addLog(`Theme changed to ${name}.`, 'info');
+}
+
+function selectLaunchMode(mode, el) {
+    setCookie('launchMethod', mode);
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    if (el) el.classList.add('selected');
+    updateModeBadge();
+    showToast('Launch mode: ' + (GX_MODE_LABELS[mode] || mode));
+    addLog(`Launch mode set to ${GX_MODE_LABELS[mode] || mode}.`, 'info');
+}
+
+function updateModeBadge() {
+    const method = getCookie('launchMethod') || 'blob';
+    const badge = document.getElementById('mode-badge-text');
+    if (badge) badge.textContent = GX_MODE_LABELS[method] || method.toUpperCase();
+}
+
+let _selectedGame = '';
+function toggleGameDropdown() { document.getElementById('game-dropdown').classList.toggle('open'); }
+function selectGame(name) {
+    _selectedGame = name;
+    document.getElementById('game-label').textContent = name;
+    document.getElementById('game-dropdown').classList.remove('open');
+    document.getElementById('play-btn').disabled = false;
+    setStatus('GAME: <span class="hl">' + name + '</span>');
+    addLog(`Selected game: ${name}`, 'info');
+}
+
+async function populateGames() {
+    const dd = document.getElementById('game-dropdown');
+    dd.innerHTML = '<div class="version-group-label">Loading games…</div>';
+    addLog(`Fetching available games from repository...`, 'info');
+    
+    try {
+        const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GAMES_PATH}`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const items = await res.json();
+        const folders = items.filter(it => it.type === 'dir');
+        dd.innerHTML = '';
+        folders.forEach(f => {
+            const opt = document.createElement('div');
+            opt.className = 'version-option';
+            opt.textContent = f.name;
+            opt.onclick = () => selectGame(f.name);
+            dd.appendChild(opt);
+        });
+        addLog(`Successfully loaded ${folders.length} games.`, 'success');
+    } catch (e) {
+        dd.innerHTML = '<div class="version-group-label">Failed to load</div>';
+        addLog(`Failed to fetch game list: ${e.message}`, 'error');
+    }
+}
+
+// ===== SKINS LOGIC =====
+function loadSkins() {
+    const grid = document.getElementById('skins-grid');
+    grid.innerHTML = '';
+    let skins = [];
+    try { skins = JSON.parse(getCookie('savedSkins') || '[]'); } catch(e) {}
+    
+    skins.forEach(user => {
+        const card = document.createElement('div');
+        card.className = 'skin-card';
+        card.innerHTML = `
+            <img src="https://mc-api.io/render/FULL/${encodeURIComponent(user)}/JAVA?size=256" alt="${user}">
+            <div class="skin-name">${user}</div>
+            <div style="display:flex;gap:5px;">
+                <a href="https://mineskin.eu/skin/${encodeURIComponent(user)}" class="settings-btn" target="_blank" download>Download</a>
+                <button class="settings-btn" style="background:#cc0000;border-color:#ff4444;padding:7px 12px;" onclick="removeSkin('${user}')">X</button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function addSkin() {
+    const input = document.getElementById('skin-input');
+    const user = input.value.trim();
+    if(!user) { showToast('Please enter a username'); return; }
+    
+    let skins = [];
+    try { skins = JSON.parse(getCookie('savedSkins') || '[]'); } catch(e) {}
+    
+    if(!skins.includes(user)) {
+        skins.push(user);
+        setCookie('savedSkins', JSON.stringify(skins));
+        loadSkins();
+        showToast(`Skin for ${user} added!`);
+        addLog(`Added new skin layout for user: ${user}`, 'info');
+    } else {
+        showToast('Skin already in list!');
+    }
+    input.value = '';
+}
+
+function removeSkin(user) {
+    let skins = [];
+    try { skins = JSON.parse(getCookie('savedSkins') || '[]'); } catch(e) {}
+    skins = skins.filter(s => s !== user);
+    setCookie('savedSkins', JSON.stringify(skins));
+    loadSkins();
+    showToast(`Skin for ${user} removed.`);
+    addLog(`Removed skin layout for user: ${user}`, 'info');
+}
+
+// ===== FETCH LOGIC =====
+async function _resolveGameFiles(folderName) {
+    const path = `${GAMES_PATH}/${encodeURIComponent(folderName)}`;
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`);
+    if (!res.ok) throw new Error('Could not list game files');
+    const items = await res.json();
+    const nonImages = items.filter(it => it.type === 'file' && !IMAGE_EXTS.includes((it.name.split('.').pop() || '').toLowerCase()));
+    const htmlFiles = nonImages.filter(it => it.name.toLowerCase().endsWith('.html'));
+    if (!htmlFiles.length) throw new Error('No HTML found');
+    const entry = (htmlFiles.find(f => f.name.toLowerCase() === 'index.html') || htmlFiles[0]).name;
+    const isDir = nonImages.length > 1;
+    return { entry, isDir };
+}
+
+var _lsPolyfill = '<scr' + 'ipt>(function(){var s={};Object.defineProperty(window,"localStorage",{value:{getItem:function(k){return s.hasOwnProperty(k)?s[k]:null;},setItem:function(k,v){s[k]=String(v);},removeItem:function(k){delete s[k];},clear:function(){s={};},key:function(i){return Object.keys(s)[i]||null;},get length(){return Object.keys(s).length;}},writable:false,configurable:false});}());</' + 'script>';
+
+async function _fetchDirHtml(folderName, entry) {
+    const repoRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`);
+    const repo = await repoRes.json();
+    const branch = repo.default_branch || GH_BRANCH;
+    const commitRes = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/commits/${branch}`);
+    const commit = await commitRes.json();
+    const hash = commit.sha;
+    const BASE = `https://raw.githack.com/${GH_OWNER}/${GH_REPO}/${hash}/${GAMES_PATH}/${encodeURIComponent(folderName)}/`;
+    const res = await fetch(BASE + entry);
+    let text = await res.text();
+    text = text.replace(/<head([^>]*)>/i, '<head$1>' + _lsPolyfill + '<base href="' + BASE + '">');
+    return text;
+}
+
+async function _fetchHtmlOnly(folderName, entry) {
+    const url = `https://raw.githack.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GAMES_PATH}/${encodeURIComponent(folderName)}/${entry}`;
+    const res = await fetch(url);
+    return await res.text();
+}
+
+async function playGame() {
+    if (!_selectedGame) return;
+    const method = getCookie('launchMethod') || 'blob';
+    
+    addLog(`Initiating launch sequence for ${_selectedGame}...`, 'info');
+    
+    let _preOpened = null;
+    if (method === 'about-blank' || method === 'blob') {
+        _preOpened = window.open('', '_blank');
+        if (!_preOpened) { 
+            showToast('Popup blocked — allow popups for this site.'); 
+            addLog(`Launch cancelled: Popups are blocked by your browser.`, 'error');
+            return; 
+        }
+    }
+
+    setStatus('RESOLVING GAME FILES...');
+    addLog(`Resolving game files in repository...`, 'info');
+    
+    let entry, isDir;
+    try {
+        ({ entry, isDir } = await _resolveGameFiles(_selectedGame));
+        addLog(`File resolution complete. Entry point: ${entry}`, 'success');
+    } catch (e) {
+        _preOpened?.close();
+        showToast('Launch failed: ' + e.message);
+        setStatus('FETCH ERROR');
+        addLog(`Failed to resolve files: ${e.message}`, 'error');
+        return;
+    }
+
+    const liveUrl = LIVE_ROOT + GAMES_PATH + '/' + encodeURIComponent(_selectedGame) + '/' + entry;
+
+    if (method === 'regular') {
+        window.open(liveUrl, '_blank');
+        setStatus('LAUNCHED');
+        addLog(`Game launched in regular mode (Live GitHub URL).`, 'success');
+        return;
+    }
+
+    if (method === 'popup') {
+        const w = window.open(liveUrl, '_blank', 'width=1280,height=720,toolbar=0,menubar=0,location=0,status=0');
+        if (!w) {
+            showToast('Popup blocked — allow popups.');
+            addLog(`Popup blocked by browser.`, 'error');
+        } else {
+            setStatus('LAUNCHED AS POPUP');
+            addLog(`Game launched in borderless popup window.`, 'success');
+        }
+        return;
+    }
+
+    if (method === 'data-uri') {
+        _launchDataUri(_selectedGame, entry, isDir);
+        return;
+    }
+
+    try {
+        setStatus(isDir ? 'FETCHING (DIR)...' : 'FETCHING...');
+        showLoading(isDir ? 'FETCHING (DIR)...' : 'FETCHING...');
+        addLog(`Downloading raw HTML files...`, 'info');
+        
+        const html = isDir ? await _fetchDirHtml(_selectedGame, entry) : await _fetchHtmlOnly(_selectedGame, entry);
+        hideLoading();
+        
+        addLog(`Files downloaded successfully. Formatting container...`, 'success');
+
+        if (method === 'about-blank') {
+            _preOpened.document.open();
+            _preOpened.document.write(html);
+            _preOpened.document.close();
+            setStatus('LAUNCHED AS ABOUT:BLANK');
+            addLog(`Game launched successfully via about:blank injection.`, 'success');
+        } else if (method === 'blob') {
+            const blob = new Blob([html], { type: 'text/html' });
+            _preOpened.location = URL.createObjectURL(blob);
+            setStatus('LAUNCHED AS BLOB URL');
+            addLog(`Game launched successfully via local Blob URL.`, 'success');
+        }
+    } catch (e) {
+        hideLoading();
+        _preOpened?.close();
+        showToast('Launch failed: ' + e.message);
+        setStatus('FETCH ERROR');
+        addLog(`Game launch failed: ${e.message}`, 'error');
+    }
+}
+
+function _launchDataUri(folderName, entry, isDir) {
+    try {
+        const folder  = encodeURIComponent(folderName);
+        const cdnBase = `https://raw.githack.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GAMES_PATH}/${folder}/`;
+        const gameUrl = cdnBase + entry;
+        const baseTagJs = isDir ? `var baseTag='<base href="${cdnBase}">';` : `var baseTag='';`;
+
+        addLog(`Generating base64 encoded Data URI...`, 'info');
+
+        const loaderHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><base href="${cdnBase}"><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:monospace;color:#fff}#s{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0a0a0a}#bar-wrap{width:320px;height:6px;background:#222;border-radius:3px;overflow:hidden}#bar{height:100%;width:0%;background:#00aa00;border-radius:3px;transition:width 0.1s}#msg{font-size:13px;color:#aaa;letter-spacing:0.1em}</style></head><body><div id="s"><div id="msg">FETCHING GAME...</div><div id="bar-wrap"><div id="bar"></div></div></div><script>(async()=>{const url='${gameUrl}';const bar=document.getElementById('bar');const msg=document.getElementById('msg');try{const res=await fetch(url);if(!res.ok)throw new Error('HTTP '+res.status);const len=+res.headers.get('content-length')||0;const reader=res.body.getReader();const chunks=[];let got=0;while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);got+=value.length;if(len)bar.style.width=(5+Math.round(got/len*90))+'%';}bar.style.width='100%';msg.textContent='LAUNCHING...';const merged=new Uint8Array(got);let pos=0;for(const c of chunks){merged.set(c,pos);pos+=c.length;}const html=new TextDecoder().decode(merged);${baseTagJs} let patched;if(/<head[\\s>]/i.test(html)){patched=html.replace(/(<head[^>]*>)/i,'$1\\n'+baseTag);}else if(/<html[\\s>]/i.test(html)){patched=html.replace(/(<html[^>]*>)/i,'$1\\n<head>'+baseTag+'</head>');}else{patched=baseTag+html;}document.open();document.write(patched);document.close();}catch(e){msg.textContent='ERROR: '+e.message;bar.style.background='#aa0000';}})();</` + `script></body></html>`;
+
+        const b64 = btoa(unescape(encodeURIComponent(loaderHtml)));
+        navigator.clipboard.writeText('data:text/html;base64,' + b64)
+            .then(() => {
+                showToast('Data URI copied to clipboard! Paste in new tab.');
+                addLog(`Data URI generated and copied to clipboard successfully.`, 'success');
+            })
+            .catch(() => {
+                showToast('Failed to copy Data URI automatically.');
+                addLog(`Data URI generated but browser blocked automatic clipboard access.`, 'error');
+            });
+        setStatus('DATA URI COPIED');
+    } catch (e) {
+        showToast('Failed to generate URI');
+        addLog(`Failed to generate Data URI: ${e.message}`, 'error');
+    }
+}
+
+function saveUsername() {
+    const val = document.getElementById('username-input').value;
+    setCookie('username', val);
+    document.getElementById('profile-name').textContent = val || 'Steve';
+    showToast('Username saved!');
+    addLog(`Profile username updated to ${val || 'Steve'}.`, 'info');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    addLog(`Launcher initialization sequence started.`, 'info');
+    
+    const username = getCookie('username') || 'Steve';
+    document.getElementById('profile-name').textContent = username;
+    document.getElementById('username-input').value = username === 'Steve' ? '' : username;
+    
+    const savedMode = getCookie('launchMethod') || 'blob';
+    document.querySelectorAll('.mode-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.mode === savedMode);
+    });
+    updateModeBadge();
+
+    const savedTheme = getCookie('launcherTheme') || 'creeper-green';
+    applyTheme(savedTheme);
+    
+    populateGames();
+    loadSkins();
+    
+    addLog(`System ready. Awaiting user input.`, 'success');
+});
+</script>
+</body>
+</html>
